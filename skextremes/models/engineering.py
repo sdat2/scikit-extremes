@@ -1,4 +1,7 @@
 """
+skextremes/modules/engineering.py
+=================================
+
 This module contains algorithms found in the literature and used extensively in
 some fields.
 
