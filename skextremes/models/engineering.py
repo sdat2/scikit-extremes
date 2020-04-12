@@ -134,13 +134,13 @@ class _GumbelBase:
         ax1.scatter(x, Y,
                     facecolor = (0.7,0.7,1), color = '0',
                     s= 50, linewidths = 1)
-        ax1.set_ylabel(r'$-ln(-ln(P))$')
-        ax1.set_xlabel('Extreme values')
+        ax1.set_ylabel(r'$-\ln{(-\ln{(P)})}$')
+        ax1.set_xlabel('Extreme Values')
 
         # plot the return period
         ax2.plot(_np.arange(2,101), extremes)
         ax2.set_xlabel('T (years)')
-        ax2.set_ylabel('Extreme values')
+        ax2.set_ylabel('Extreme Values')
 
         # plot the distribution
         _x = _np.linspace(self.distr.ppf(0.001), self.distr.ppf(0.999), 100)
