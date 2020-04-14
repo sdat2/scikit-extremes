@@ -31,7 +31,7 @@ class TestHarris1996:
             har.results["characteristic product"],
             self.charprodHarris,
             decimal=2,
-        )
+            )
 
     def test_input(self):
         # Check if input is correct

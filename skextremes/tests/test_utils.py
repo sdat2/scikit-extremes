@@ -16,7 +16,7 @@ from skextremes.utils import bootstrap_ci, gev_momfit, gum_momfit
 
 class TestUtilsBootstrap:
     """
-    This tests are an adaptation of 
+    This tests are an adaptation of
     https://github.com/cgevans/scikits-bootstrap/blob/master/scikits/bootstrap/test_bootstrap.py
     in order to test the simple implementation used in skextremes.
     """
@@ -96,7 +96,7 @@ class TestUtilsGEVMOM:
     Results can be obtained running the following in a R console:
     ```
     library(nsRFA)
-    data = c(4.5, 5.3, 4.8, 5.6, 4.8, 3.6, 4.3, 4.1,4.4, 3.6, 5.3, 4.6, 4.9, 
+    data = c(4.5, 5.3, 4.8, 5.6, 4.8, 3.6, 4.3, 4.1,4.4, 3.6, 5.3, 4.6, 4.9,
     4.3, 4.8, 5.3, 4.5, 4.5, 4.2, 4.4, 4.7, 4.8, 4.6, 5.1, 4.4, 5.2, 5.4,5.8)
     moment_estimation(data, dist = "GEV")
     ```
@@ -150,7 +150,7 @@ class TestUtilsGUMMOM:
     Results can be obtained running the following in a R console:
     ```
     library(nsRFA)
-    data = c(4.5, 5.3, 4.8, 5.6, 4.8, 3.6, 4.3, 4.1,4.4, 3.6, 5.3, 4.6, 4.9, 
+    data = c(4.5, 5.3, 4.8, 5.6, 4.8, 3.6, 4.3, 4.1,4.4, 3.6, 5.3, 4.6, 4.9,
     4.3, 4.8, 5.3, 4.5, 4.5, 4.2, 4.4, 4.7, 4.8, 4.6, 5.1, 4.4, 5.2, 5.4,5.8)
     moment_estimation(data, dist = "GUMBEL")
     ```

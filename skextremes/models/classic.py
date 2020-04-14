@@ -27,9 +27,10 @@ from ..utils import gum_momfit as _gum_momfit
 
 class _Base:
 
-    def __init__(self, data, fit_method = 'mle',
-                       ci = 0, ci_method = None,
-                       return_periods = None, frec = 1):
+    def __init__(self, data, fit_method='mle',
+                 ci=0, ci_method=None,
+                 return_periods = None,
+                 frec=1):
         # Data to be used for the fit
         self.data = data
 

@@ -97,7 +97,7 @@ docstringbase = """
     """
 
 class _GumbelBase:
-    def __init__(self, preconditioning = 1, ppp = None, **kwargs):
+    def __init__(self, preconditioning=1, ppp=None, **kwargs):
         super().__init__(**kwargs)
         self.preconditioning = preconditioning
         self.ppp = None
@@ -132,13 +132,13 @@ class _GumbelBase:
                  [(xmin - offset) / slope, (xmax - offset) / slope],
                  '-', color = '0.25', lw = 2, alpha = 0.5)
         ax1.scatter(x, Y,
-                    facecolor = (0.7,0.7,1), color = '0',
+                    facecolor = (0.7, 0.7,1), color = '0',
                     s= 50, linewidths = 1)
         ax1.set_ylabel(r'$-\ln{(-\ln{(P)})}$')
         ax1.set_xlabel('Extreme Values')
 
         # plot the return period
-        ax2.plot(_np.arange(2,101), extremes)
+        ax2.plot(_np.arange(2, 101), extremes)
         ax2.set_xlabel('T (years)')
         ax2.set_ylabel('Extreme Values')
 
@@ -157,7 +157,7 @@ class _GumbelBase:
 class Harris1996(_GumbelBase):
     __doc__ = docstringbase.format('Harris1996', '_ppp_harris1996')
 
-    def __init__(self, data = None, ppp = "Harris1996", **kwargs):
+    def __init__(self, data=None, ppp="Harris1996", **kwargs):
         super().__init__(**kwargs)
         try:
             self.data = data
@@ -262,13 +262,13 @@ class Harris1996(_GumbelBase):
 class Lieblein(_GumbelBase):
     __doc__ = docstringbase.format('Lieblein', '_ppp_lieblein')
 
-    def __init__(self, data = None, ppp = "Lieblein", **kwargs):
+    def __init__(self, data=None, ppp="Lieblein", **kwargs):
         super().__init__(**kwargs)
         try:
             self.data = data
             self.N = len(self.data)
             self.ppp = ppp
-            self._ppp_lieblein()
+            self._ppp_lieblein()  # fit ppp.
         except:
             raise Exception('You should provide some data.')
 
@@ -463,13 +463,13 @@ class PPPLiterature(_GumbelBase):
 
         _ppp_weibull""")
 
-    def __init__(self, data = None, ppp = "Weibull", **kwargs):
+    def __init__(self, data=None, ppp="Weibull", **kwargs):
         super().__init__(**kwargs)
         try:
             self.data = data
             self.N = len(self.data)
             self.ppp = ppp
-            self._calculate_values(how = self.ppp)
+            self._calculate_values(how=self.ppp)
         except:
             raise Exception('You should provide some data.')
 
@@ -550,8 +550,8 @@ class PPPLiterature(_GumbelBase):
         self.c     = 0
         self.loc   = self.results['offset']
         self.scale = self.results['slope']
-        self.distr = _st.gumbel_r(loc = self.loc,
-                                   scale = self.scale)
+        self.distr = _st.gumbel_r(loc=self.loc,
+                                  scale=self.scale)
 
     def _ppp_adamowski(self):
         """
@@ -569,7 +569,7 @@ class PPPLiterature(_GumbelBase):
             De, M., 2000. A new unbiased plotting position formula for gumbel
             distribution. Stochastic Envir. Res. Risk Asses., 14: 1-7.
         """
-        self._calculate_values(how = "Adamowski")
+        self._calculate_values(how="Adamowski")
 
     def _ppp_beard(self):
         """
@@ -587,7 +587,7 @@ class PPPLiterature(_GumbelBase):
             De, M., 2000. A new unbiased plotting position formula for gumbel
             distribution. Stochastic Envir. Res. Risk Asses., 14: 1-7.
         """
-        self._calculate_values(how = "Beard")
+        self._calculate_values(how="Beard")
 
     def _ppp_blom(self):
         """
@@ -605,7 +605,7 @@ class PPPLiterature(_GumbelBase):
             De, M., 2000. A new unbiased plotting position formula for gumbel
             distribution. Stochastic Envir. Res. Risk Asses., 14: 1-7.
         """
-        self._calculate_values(how = "Blom")
+        self._calculate_values(how="Blom")
 
     def _ppp_chegodayev(self):
         """
@@ -623,7 +623,7 @@ class PPPLiterature(_GumbelBase):
             De, M., 2000. A new unbiased plotting position formula for gumbel
             distribution. Stochastic Envir. Res. Risk Asses., 14: 1-7.
         """
-        self._calculate_values(how = "Chegodayev")
+        self._calculate_values(how="Chegodayev")
 
     def _ppp_cunnane(self):
         """
@@ -641,7 +641,7 @@ class PPPLiterature(_GumbelBase):
             Cunnane, C., 1978. Unbiased plotting positions: A review.
             J. Hydrol., 37: 205-222.
         """
-        self._calculate_values(how = "Cunnane")
+        self._calculate_values(how="Cunnane")
 
     def _ppp_gringorten(self):
         """
@@ -661,7 +661,7 @@ class PPPLiterature(_GumbelBase):
             River Osun at Apoje Sub-basin, Nigeria. Agric. Eng. Int.:
             CIGR J., Vol. 9.
         """
-        self._calculate_values(how = "Gringorten")
+        self._calculate_values(how="Gringorten")
 
     def _ppp_hazen(self):
         """
@@ -681,7 +681,7 @@ class PPPLiterature(_GumbelBase):
             River Osun at Apoje Sub-basin, Nigeria. Agric. Eng. Int.:
             CIGR J., Vol. 9.
         """
-        self._calculate_values(how = "Hazen")
+        self._calculate_values(how="Hazen")
 
     def _ppp_hirsch(self):
         """
@@ -701,7 +701,7 @@ class PPPLiterature(_GumbelBase):
             Technical Report, Department of Civil and Environmental Engineering,
             Universities of California.
         """
-        self._calculate_values(how = "Hirsch")
+        self._calculate_values(how="Hirsch")
 
     def _ppp_iec56(self):
         """
@@ -720,7 +720,7 @@ class PPPLiterature(_GumbelBase):
             failure data points to be plotted on weibull and other probability
             paper. Electr. Insulation Transact., 25: 489-492.
         """
-        self._calculate_values(how = "IEC56")
+        self._calculate_values(how="IEC56")
 
     def _ppp_landwehr(self):
         """
@@ -738,7 +738,7 @@ class PPPLiterature(_GumbelBase):
             Makkonen, L., 2008. Problem in the extreme value analysis.
             Structural Safety, 30: 405-419.
         """
-        self._calculate_values(how = "Landwehr")
+        self._calculate_values(how="Landwehr")
 
     def _ppp_laplace(self):
         """
@@ -758,7 +758,7 @@ class PPPLiterature(_GumbelBase):
             Technical Report, Department of Civil and Environmental Engineering,
             Universities of California.
         """
-        self._calculate_values(how = "Laplace")
+        self._calculate_values(how="Laplace")
 
     def _ppp_mm(self):
         """
@@ -776,7 +776,7 @@ class PPPLiterature(_GumbelBase):
             Makkonen, L., 2008. Problem in the extreme value analysis.
             Structural Safety, 30: 405-419.
         """
-        self._calculate_values(how = "McClung and Mears")
+        self._calculate_values(how="McClung and Mears")
 
     def _ppp_tukey(self):
         """
@@ -794,7 +794,7 @@ class PPPLiterature(_GumbelBase):
             Makkonen, L., 2008. Problem in the extreme value analysis.
             Structural Safety, 30: 405-419.
         """
-        self._calculate_values(how = "Tukey")
+        self._calculate_values(how="Tukey")
 
     def _ppp_weibull(self):
         """
@@ -812,4 +812,4 @@ class PPPLiterature(_GumbelBase):
             Hynman, R.J. and Y. Fan, 1996. Sample quantiles in statistical
             packages. Am. Stat., 50: 361-365.
         """
-        self._calculate_values(how = "Weibull")
+        self._calculate_values(how="Weibull")
