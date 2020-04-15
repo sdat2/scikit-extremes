@@ -92,7 +92,7 @@ class _Base:
         raise NotImplementedError("Subclasses should implement this!")
 
     def _ci(self):
-        # This is a base class and shouldn't be used as it.
+        # This is a base class and shouldn't be used 'as is'.
         # This method should be implemented in the subclass.
         raise NotImplementedError("Subclasses should implement this!")
 

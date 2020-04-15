@@ -11,10 +11,10 @@ Documentation can be found [here](https://scikit-extremes.readthedocs.io/en/late
 
 To install the package you can follow the next steps:
 
-    # lmoments has not been updated in a while so we use the master 
+    # lmoments has not been updated in a while so we use the master
     # (see https://github.com/OpenHydrology/lmoments3/issues/8)
     pip install git+https://github.com/OpenHydrology/lmoments3.git
-    
+
     git clone https://github.com/kikocorreoso/scikit-extremes.git
 
     cd scikit-extremes
@@ -52,3 +52,4 @@ This is work in progress and at its current state only some models can be used:
 
 [In case you find a bug, please, open an issue](https://github.com/kikocorreoso/scikit-extremes/issues).
  You can also use the issues to propose more features or enhancements.
+ 

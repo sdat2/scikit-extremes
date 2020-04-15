@@ -106,12 +106,10 @@ class _GumbelBase:
 
     def plot_summary(self):
         """
-        Summary plot including PP plot, QQ plot, empirical and fitted pdf and
-        return values and periods.
-
+        Summary plot.
         **Returns**
 
-        4-panel plot including PP, QQ, pdf and return level plots
+        3-panel plot.
         """
         # data to be used
         x = self.results['data']
