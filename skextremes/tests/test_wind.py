@@ -16,9 +16,12 @@ from skextremes.models.wind import (
 # Results as provided by windographer
 vave = [8.588, 9.924, 10.767, 9.974]
 weibk = [2.156, 2.051, 2.206, 2.467]
-expected_Exact = [32.918, 40.493, 40.135, 32.724]
-expected_Gumbel = [33.364, 41.040, 40.677, 33.158]
-expected_Davenport = [36.288, 44.580, 44.263, 36.129]
+expected_Exact = [32.918, 40.493,
+                  40.135, 32.724]
+expected_Gumbel = [33.364, 41.040,
+                   40.677, 33.158]
+expected_Davenport = [36.288, 44.580,
+                      44.263, 36.129]
 
 
 class TestWind:

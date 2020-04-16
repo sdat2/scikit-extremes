@@ -313,15 +313,17 @@ class _Base:
         4-panel plot including PP, QQ, pdf and return level plots
         """
 
+        # These are in a bizzare order.
+
         fig, ((ax3, ax2), (ax4, ax1)) = _plt.subplots(2, 2, figsize=(8, 6))
 
         # PDF plot
         x = _np.linspace(self.distr.ppf(0.001),
                          self.distr.ppf(0.999),
                          100)
-        ax1.plot(x, self.distr.pdf(x), label = 'Fitted')
-        ax1.hist(self.data, density = True,
-                 color = '#a3c1ad', alpha = 0.75, label = "Empirical")
+        ax1.plot(x, self.distr.pdf(x), label='Fitted')
+        ax1.hist(self.data, density=True,
+                 color='#a3c1ad', alpha=0.75, label="Empirical")
         ax1 = self._plot(ax1, 'Density Plot',
                          '$x$', 'f($x$)')
         ax1.legend(loc='best', frameon=False)
@@ -335,7 +337,7 @@ class _Base:
         ax2.set_xlim(0, 1)
         ax2.set_ylim(0, 1)
         ax2 = self._plot(ax2, 'P-P Plot', 'Model', 'Empirical')
-        ax2.scatter(x, y, marker='+', color = '#002147', alpha=0.7)
+        ax2.scatter(x, y, marker='+', color='#002147', alpha=0.7)
 
         # PP Plot
         y = _np.sort(self.data)
@@ -361,16 +363,19 @@ class _Base:
         ax4.semilogx(T, sT, 'k', color='#CB4154')
         ax4.scatter(self.frec * Nmax/N, sorted(self.data)[::-1],
                     color='#002147', alpha=0.7)
+
         if self.ci:
             #y1 = sT - st.norm.ppf(1 - self.ci / 2) * np.sqrt(self._ci_se)
             #y2 = sT + st.norm.ppf(1 - self.ci / 2) * np.sqrt(self._ci_se)
-            ax4.semilogx(T, self._ci_Td, '--')
-            ax4.semilogx(T, self._ci_Tu, '--')
+            ax4.semilogx(T, self._ci_Td, '--', color='#CB4154', alpha=0.6)
+            ax4.semilogx(T, self._ci_Tu, '--', color='#CB4154', alpha=0.6)
             ax4.fill_between(T, self._ci_Td, self._ci_Tu,
-                             color='green', alpha=0.12)
+                             color='#a3c1ad', alpha=0.25)
+            ax4.set_xlim([0.8, _np.max(T)])
 
         # I love matplotlib for stuff like this, thanks, guys!!!
         _plt.tight_layout()
+
         return fig, ax1, ax2, ax3, ax4
 
 
@@ -594,21 +599,21 @@ class GEV(_Base):
         # The function to bootstrap
         def func(data):
             sample = _st.genextreme.rvs(self.c,
-                                       loc = self.loc,
-                                       scale = self.scale,
-                                       size = len(self.data))
+                                        loc=self.loc,
+                                        scale=self.scale,
+                                        size=len(self.data))
             c, loc, scale = _st.genextreme.fit(sample, self.c,
-                                              loc = self.loc,
-                                              scale = self.scale,
-                                              optimizer = _op.fmin_bfgs)
+                                               loc=self.loc,
+                                               scale=self.scale,
+                                               optimizer=_op.fmin_bfgs)
             T = _np.arange(0.1, 500.1, 0.1)
-            sT = _st.genextreme.isf(self.frec/T, c, loc = loc, scale = scale)
+            sT = _st.genextreme.isf(self.frec/T, c, loc=loc, scale=scale)
             res = [c, loc, scale]
             res.extend(sT.tolist())
             return tuple(res)
 
         # the calculations itself
-        out = _bsci(self.data, statfunction = func, n_samples = 500)
+        out = _bsci(self.data, statfunction=func, n_samples=500)
         self._ci_Td = out[0, 3:]
         self._ci_Tu = out[1, 3:]
         self.params_ci = OrderedDict()
@@ -659,8 +664,8 @@ class Gumbel(GEV):
         self.c     = self.params['shape']
         self.loc   = self.params['location']
         self.scale = self.params['scale']
-        self.distr = _st.gumbel_r(loc = self.loc,
-                                   scale = self.scale)
+        self.distr = _st.gumbel_r(loc=self.loc,
+                                   scale=self.scale)
 
 class GPD(_Base):
     pass
