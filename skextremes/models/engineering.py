@@ -97,9 +97,13 @@ docstringbase = """
     """
 
 class _GumbelBase:
-    def __init__(self, preconditioning=1, ppp=None, **kwargs):
+    def __init__(self, preconditioning=1,
+                 ev_unit='', block_unit='',
+                 ppp=None, **kwargs):
         super().__init__(**kwargs)
         self.preconditioning = preconditioning
+        self.ev_unit = ev_unit
+        self.bloc_unit = block_unit
         self.ppp = None
         self.results = {}
 
@@ -133,12 +137,12 @@ class _GumbelBase:
                     facecolor = (0.7, 0.7,1), color = '0',
                     s= 50, linewidths = 1)
         ax1.set_ylabel(r'$-\ln{(-\ln{(P)})}$')
-        ax1.set_xlabel('Extreme Values')
+        ax1.set_xlabel('Extreme Values  '+self.ev_unit)
 
         # plot the return period
         ax2.plot(_np.arange(2, 101), extremes)
         ax2.set_xlabel('T (years)')
-        ax2.set_ylabel('Extreme Values')
+        ax2.set_ylabel('Extreme Values '+self.ev_unit)
 
         # plot the distribution
         _x = _np.linspace(self.distr.ppf(0.001), self.distr.ppf(0.999), 100)
@@ -148,11 +152,12 @@ class _GumbelBase:
         desf = xmax * 0.1
         ax3.set_xlim(xmin - desf, xmax + desf)
         ax3.set_ylabel('Probability')
-        ax3.set_xlabel('Extreme values')
+        ax3.set_xlabel('Extreme values  '+self.ev_unit)
 
         return fig, ax1, ax2, ax3
 
 class Harris1996(_GumbelBase):
+
     __doc__ = docstringbase.format('Harris1996', '_ppp_harris1996')
 
     def __init__(self, data=None, ppp="Harris1996", **kwargs):
@@ -185,6 +190,7 @@ class Harris1996(_GumbelBase):
             statistics applied to wind speeds', Journal of Wind Engineering and
             Industrial Aerodynamics, 59, 1-22.
         """
+
         data = _np.sort(self.data)[::-1]
         data = data ** self.preconditioning
         N = self.N
@@ -258,6 +264,7 @@ class Harris1996(_GumbelBase):
 
 
 class Lieblein(_GumbelBase):
+
     __doc__ = docstringbase.format('Lieblein', '_ppp_lieblein')
 
     def __init__(self, data=None, ppp="Lieblein", **kwargs):

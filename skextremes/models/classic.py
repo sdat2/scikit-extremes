@@ -27,12 +27,15 @@ from ..utils import gum_momfit as _gum_momfit
 
 class _Base:
 
-    def __init__(self, data, fit_method='mle',
+    def __init__(self, data, ev_unit='',
+                 block_unit='', fit_method='mle',
                  ci=0, ci_method=None,
                  return_periods = None,
                  frec=1):
         # Data to be used for the fit
         self.data = data
+        self.ev_unit = ev_unit
+        self.block_unit = block_unit
 
         # Fit method to be used
         if fit_method in ['mle', 'mom', 'lmoments']:
@@ -210,7 +213,7 @@ class _Base:
         ax.hist(self.data, density=True,
                 color='#a3c1ad', alpha=0.75,
                 label="Empirical")
-        ax = self._plot(ax, 'Density Plot', '$x$', 'f($x$)')
+        ax = self._plot(ax, 'Density Plot', '$x$ '+self.ev_unit, 'f($x$)')
         ax.legend(loc='best', frameon=False)
 
     def plot_pp(self):
@@ -325,7 +328,7 @@ class _Base:
         ax1.hist(self.data, density=True,
                  color='#a3c1ad', alpha=0.75, label="Empirical")
         ax1 = self._plot(ax1, 'Density Plot',
-                         '$x$', 'f($x$)')
+                         '$x$'+ self.ev_unit, 'f($x$)')
         ax1.legend(loc='best', frameon=False)
 
         # QQ plot
@@ -358,8 +361,8 @@ class _Base:
         N = _np.r_[1:len(self.data)+1] * self.frec
         Nmax=max(N)
         ax4 = self._plot(ax4, 'Return Level Plot',
-                              'Return Period',
-                              'Return Level')
+                              'Return Period ' + self.block_unit,
+                              'Return Level' + self.ev_unit)
         ax4.semilogx(T, sT, 'k', color='#CB4154')
         ax4.scatter(self.frec * Nmax/N, sorted(self.data)[::-1],
                     color='#002147', alpha=0.7)
@@ -455,9 +458,9 @@ class GEV(_Base):
             # The mle fit will start with the initial estimators obtained
             # with lmoments above
             _params = _st.genextreme.fit(self.data, _params0['c'],
-                                        loc = _params0['loc'],
-                                        scale = _params0['scale'],
-                                        optimizer = _op.fmin_bfgs)
+                                         loc = _params0['loc'],
+                                         scale = _params0['scale'],
+                                         optimizer = _op.fmin_bfgs)
             self.params = OrderedDict()
             # For the shape parameter the value provided by scipy
             # is defined as negative as that obtained from other
@@ -543,27 +546,43 @@ class GEV(_Base):
 
         # VarCovar matrix and confidence values for estimators and return values
         # Confidence interval for return values (up values and down values)
+        # automatically have zeros (would NaNs be better?). This might fail too quietly.
         ci_Tu = _np.zeros(sT.shape)
         ci_Td = _np.zeros(sT.shape)
-        if c:         # If c then we are calculating GEV confidence intervals
-            varcovar = _np.linalg.inv(hess([c, loc, scale]))
+
+        # I currently don't understand the truth value of a float.
+        if c:
+            print('c is', c)
+
+            # If c then we are calculating GEV confidence intervals
+            print('\n !working out GEV confidence intervals! \n')
+
+            varcovar = _np.linalg.inv(hess([c, loc, scale])) # wow.
             self.params_ci = OrderedDict()
             se = _np.sqrt(_np.diag(varcovar))
             self._se = se
+
+            # symmetric error bars in all the parameters.
             self.params_ci['shape']    = (self.c - _st.norm.ppf(1 - self.ci / 2) * se[0],
                                           self.c + _st.norm.ppf(1 - self.ci / 2) * se[0])
             self.params_ci['location'] = (self.loc - _st.norm.ppf(1 - self.ci / 2) * se[1],
                                           self.loc + _st.norm.ppf(1 - self.ci / 2) * se[1])
             self.params_ci['scale']    = (self.scale - _st.norm.ppf(1 - self.ci / 2) * se[2],
                                           self.scale + _st.norm.ppf(1 - self.ci / 2) * se[2])
+
             for i, val in enumerate(sT2):
-                gradZ = [scale * (c**-2) * (1 - sT[i] ** (-c)) - scale * (c**-1) * (sT[i]**-c) * _np.log(sT[i]),
-                         1,
-                         -(1 - sT[i] ** (-c)) / c]
+                gradZ = [scale * (c**-2) * (1 - sT[i] ** (-c))
+                         - scale * (c**-1) * (sT[i]**-c) * _np.log(sT[i]),
+                         1, -(1 - sT[i] ** (-c)) / c]
                 se = _np.dot(_np.dot(gradZ, varcovar), _np.array(gradZ).T)
-                ci_Tu[i] = val + _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se)
-                ci_Td[i] = val - _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se)
-        else:         # else then we are calculating Gumbel confidence intervals
+
+                # Gosh, what did that line do?
+                ci_Tu[i] = val + _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se) # upper limit.
+                ci_Td[i] = val - _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se) # lower limit.
+
+        else:
+            # else then we are calculating Gumbel confidence intervals
+            print('\n !GUMBEL confidence intervals being calculated! \n')
             varcovar = _np.linalg.inv(hess([loc, scale]))
             self.params_ci = OrderedDict()
             se = _np.sqrt(_np.diag(varcovar))
@@ -573,11 +592,13 @@ class GEV(_Base):
                                           self.loc + _st.norm.ppf(1 - self.ci / 2) * se[0])
             self.params_ci['scale']    = (self.scale - _st.norm.ppf(1 - self.ci / 2) * se[1],
                                           self.scale + _st.norm.ppf(1 - self.ci / 2) * se[1])
+
             for i, val in enumerate(sT2):
                 gradZ = [1, -_np.log(sT[i])]
                 se = _np.dot(_np.dot(gradZ, varcovar), _np.array(gradZ).T)
                 ci_Tu[i] = val + _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se)
                 ci_Td[i] = val - _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se)
+
         self._ci_Tu = ci_Tu
         self._ci_Td = ci_Td
 
