@@ -98,7 +98,7 @@ docstringbase = """
 
 class _GumbelBase:
     def __init__(self, preconditioning=1,
-                 ev_unit='', block_unit='',
+                 ev_unit='', block_unit=' (Yrs)',
                  ppp=None, **kwargs):
         super().__init__(**kwargs)
         self.preconditioning = preconditioning
@@ -127,7 +127,7 @@ class _GumbelBase:
 
         # figure settings
         fig, (ax1, ax2, ax3) = _plt.subplots(1, 3, figsize=(15, 5))
-        # fig.suptitle(how)
+        fig.suptitle(how, y=1.03) # add the method to the supertitle
 
         # Plot the fit
         ax1.plot([xmin, xmax],
@@ -141,7 +141,7 @@ class _GumbelBase:
 
         # plot the return period
         ax2.plot(_np.arange(2, 101), extremes)
-        ax2.set_xlabel('T (years)')
+        ax2.set_xlabel('T '+self.block_unit)
         ax2.set_ylabel('Extreme Values '+self.ev_unit)
 
         # plot the distribution
@@ -189,6 +189,7 @@ class Harris1996(_GumbelBase):
             Harris RI, (1996), 'Gumbel re-visited -- a new look at extreme value
             statistics applied to wind speeds', Journal of Wind Engineering and
             Industrial Aerodynamics, 59, 1-22.
+
         """
 
         data = _np.sort(self.data)[::-1]
@@ -816,5 +817,6 @@ class PPPLiterature(_GumbelBase):
 
             Hynman, R.J. and Y. Fan, 1996. Sample quantiles in statistical
             packages. Am. Stat., 50: 361-365.
+
         """
         self._calculate_values(how="Weibull")

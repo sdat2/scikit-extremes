@@ -194,9 +194,8 @@ class _Base:
     def plot_density(self):
         """
         Histogram of the empirical pdf data and the pdf plot of the
-        fitted distribution.
-        All parameters are predefined from the frozen fitted model and empirical
-        data available.
+        fitted distribution. All parameters are predefined from the
+        frozen fitted model and empirical data available.
 
         **Returns**
 
@@ -263,7 +262,8 @@ class _Base:
 
         # plot
         ax = self._plot(ax, 'Q-Q Plot', 'Model', 'Empirical')
-        ax.scatter(x, y, marker='+', color='#002147', alpha=0.7)
+        ax.scatter(x, y, marker='+',
+                   color='#002147', alpha=0.7)
         low_lim = _np.min([x, y]) * 0.95
         high_lim = _np.max([x, y]) * 1.05
         ax.plot([low_lim, high_lim], [low_lim, high_lim], marker='+', c='k')
@@ -360,9 +360,10 @@ class _Base:
         sT = self.distr.isf(self.frec/T)
         N = _np.r_[1:len(self.data)+1] * self.frec
         Nmax=max(N)
-        ax4 = self._plot(ax4, 'Return Level Plot',
-                              'Return Period ' + self.block_unit,
-                              'Return Level' + self.ev_unit)
+        ax4 = self._plot(ax4,
+                         'Return Level Plot',
+                         'Return Period ' + self.block_unit,
+                         'Return Level' + self.ev_unit)
         ax4.semilogx(T, sT, 'k', color='#CB4154')
         ax4.scatter(self.frec * Nmax/N, sorted(self.data)[::-1],
                     color='#002147', alpha=0.7)
@@ -370,8 +371,10 @@ class _Base:
         if self.ci:
             #y1 = sT - st.norm.ppf(1 - self.ci / 2) * np.sqrt(self._ci_se)
             #y2 = sT + st.norm.ppf(1 - self.ci / 2) * np.sqrt(self._ci_se)
-            ax4.semilogx(T, self._ci_Td, '--', color='#CB4154', alpha=0.6)
-            ax4.semilogx(T, self._ci_Tu, '--', color='#CB4154', alpha=0.6)
+            ax4.semilogx(T, self._ci_Td, '--',
+                         color='#CB4154', alpha=0.6)
+            ax4.semilogx(T, self._ci_Tu, '--',
+                         color='#CB4154', alpha=0.6)
             ax4.fill_between(T, self._ci_Td, self._ci_Tu,
                              color='#a3c1ad', alpha=0.25)
             ax4.set_xlim([0.8, _np.max(T)])
@@ -461,6 +464,7 @@ class GEV(_Base):
                                          loc = _params0['loc'],
                                          scale = _params0['scale'],
                                          optimizer = _op.fmin_bfgs)
+
             self.params = OrderedDict()
             # For the shape parameter the value provided by scipy
             # is defined as negative as that obtained from other
@@ -493,8 +497,10 @@ class GEV(_Base):
         self.loc   = self.params['location']   # location
         self.scale = self.params['scale']      # scale
         self.distr = _st.genextreme(self.c,     # frozen distribution
-                                   loc = self.loc,
-                                   scale = self.scale)
+                                    loc = self.loc,
+                                    scale = self.scale)
+        # self.distr is a scipy.stats.genextreme obj.
+
 
     def _nnlf(self, theta):
         # This is used to calculate the variance-covariance matrix using the
@@ -516,13 +522,13 @@ class GEV(_Base):
         if c != 0:
             expr = 1. + c * ((x - loc) / scale)
             return (len(x) * _np.log(scale) +
-                   (1. + 1. / c) * _np.sum(_np.log(expr)) +
-                   _np.sum(expr ** (-1. / c)))
+                    (1. + 1. / c) * _np.sum(_np.log(expr)) +
+                    _np.sum(expr ** ( -1. / c)))
         else:
             expr = (x - loc) / scale
             return (len(x) * _np.log(scale) +
-                   _np.sum(expr) +
-                   _np.sum(_np.exp(-expr)))
+                    _np.sum(expr) +
+                    _np.sum(_np.exp( -expr)))
 
     def _ci_delta(self):
         # Calculate the variance-covariance matrix using the
@@ -537,12 +543,16 @@ class GEV(_Base):
 
         # data
         c  = -self.c    # We negate the shape to avoid inconsistency problems!?
+        # I.e we have just swapped the sign convention for the shape parameter!
+        # This is very confusing, please don't copy down the wrong maths.
         loc = self.loc
         scale = self.scale
-        hess = _ndt.Hessian(self._nnlf)
-        T = _np.arange(0.1, 500.1, 0.1)
-        sT = -_np.log(1.-self.frec/T)
-        sT2 = self.distr.isf(self.frec/T)
+
+        hess = _ndt.Hessian(self._nnlf)  # https://en.wikipedia.org/wiki/Hessian_matrix
+        T = _np.arange(0.1, 500.1, 0.1) # years chosen from  0.1 to 500.1 in linear space
+        sT = -_np.log(1. - self.frec / T) # return period
+        sT2 = self.distr.isf(self.frec / T) # the inverse survival function
+        # The size of the extreme value (I think)?
 
         # VarCovar matrix and confidence values for estimators and return values
         # Confidence interval for return values (up values and down values)
@@ -551,8 +561,9 @@ class GEV(_Base):
         ci_Td = _np.zeros(sT.shape)
 
         # I currently don't understand the truth value of a float.
+
         if c:
-            print('c is', c)
+            print('\n c is', c, '\n')
 
             # If c then we are calculating GEV confidence intervals
             print('\n !working out GEV confidence intervals! \n')
@@ -571,9 +582,12 @@ class GEV(_Base):
                                           self.scale + _st.norm.ppf(1 - self.ci / 2) * se[2])
 
             for i, val in enumerate(sT2):
-                gradZ = [scale * (c**-2) * (1 - sT[i] ** (-c))
-                         - scale * (c**-1) * (sT[i]**-c) * _np.log(sT[i]),
-                         1, -(1 - sT[i] ** (-c)) / c]
+
+                gradZ = [(scale * (c**(-2)) * (1 - (sT[i] ** (-c)))
+                          - scale * (c**(-1)) * (sT[i]**-c) * _np.log(sT[i])),
+                         1,
+                         - (1 - sT[i] ** (-c)) / c]
+
                 se = _np.dot(_np.dot(gradZ, varcovar), _np.array(gradZ).T)
 
                 # Gosh, what did that line do?
@@ -581,12 +595,13 @@ class GEV(_Base):
                 ci_Td[i] = val - _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se) # lower limit.
 
         else:
-            # else then we are calculating Gumbel confidence intervals
-            print('\n !GUMBEL confidence intervals being calculated! \n')
+            # else then we are calculating Gumbel confidence intervals.
+            print('\n !!!GUMBEL confidence intervals being calculated!!! \n')
             varcovar = _np.linalg.inv(hess([loc, scale]))
             self.params_ci = OrderedDict()
             se = _np.sqrt(_np.diag(varcovar))
             self._se = se
+
             self.params_ci['shape']    = (0, 0)
             self.params_ci['location'] = (self.loc - _st.norm.ppf(1 - self.ci / 2) * se[0],
                                           self.loc + _st.norm.ppf(1 - self.ci / 2) * se[0])
@@ -627,6 +642,7 @@ class GEV(_Base):
                                                loc=self.loc,
                                                scale=self.scale,
                                                optimizer=_op.fmin_bfgs)
+
             T = _np.arange(0.1, 500.1, 0.1)
             sT = _st.genextreme.isf(self.frec/T, c, loc=loc, scale=scale)
             res = [c, loc, scale]
@@ -686,7 +702,7 @@ class Gumbel(GEV):
         self.loc   = self.params['location']
         self.scale = self.params['scale']
         self.distr = _st.gumbel_r(loc=self.loc,
-                                   scale=self.scale)
+                                  scale=self.scale)
 
 class GPD(_Base):
     pass
