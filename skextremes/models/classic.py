@@ -404,27 +404,52 @@ class _Base:
 
         return fig, ax1, ax2, ax3, ax4
 
-    def plot_pi_gp(tend_from, tend_to, plateau_by):
+    def plot_pi_gp(self, tend_from, tend_to, plateau_by):
         import numpy as np
         from sklearn.gaussian_process import GaussianProcessRegressor
-        from sklearn.gaussian_process.kernels import RBF
-        kernel = (1* RBF(length_scale=3000,
-                        length_scale_bounds=(2000, 10000),# periodicity=8000
-                        ) + 1.0 * WhiteKernel(noise_level=1e-1)))
+        from sklearn.gaussian_process.kernels import RBF, WhiteKernel
+        kernel = (1* RBF(length_scale=30,
+                        length_scale_bounds=(5, 50),# periodicity=8000
+                        ) + 1.0 * WhiteKernel(noise_level=1e-1))
 
 
         T = _np.arange(0.1, 500.1, 0.1)
         # sT = self.distr.isf(self.frec/T)
         # In other words start:stop:stepj is interpreted as np.linspace(start, stop, step, endpoint=1)
 
+        # @vectorise
+        def _func(values):
+            offset = np.zeros(len(values) )
+            for i in range(len(values)):
+                if values[i]-1 < plateau_by and values[i]-1 > 0:
+                    offset[i] = values[i] / plateau_by * (tend_to-tend_from) + tend_from
+                elif values[i]-1 >= plateau_by:
+                    offset[i] = tend_to
+                else:
+                    offset[i] = tend_from
+
+            return offset
+
         N = _np.r_[1:len(self.data)+1] * self.frec
         Nmax = max(N)
         x_values = self.frec * Nmax/N
         y_values = sorted(self.data)[::-1]
-        x_pred_npa = T
+        x_values_gp = np.asarray(x_values).reshape(-1, 1)
+        y_values_gp = np.asarray(y_values-_func(x_values)).reshape(-1, 1)
+        x_pred_npa = T.reshape(-1, 1)
 
-        gp_object = GaussianProcessRegressor(kernel=kernel, alpha=0.0).fit(x_values, y_values)
-        y_pred, y_cov = gp_object.predict(x_pred_npa[:, np.newaxis], return_cov=True)
+        print('x_values', x_values)
+        print('shape', np.shape(x_values))
+        print('y_values', y_values)
+        print('shape', np.shape(y_values))
+
+        assert(np.shape(y_values) == np.shape(x_values))
+
+        gp_object = GaussianProcessRegressor(kernel=kernel, alpha=0.005).fit(x_values_gp, y_values_gp)
+
+        y_pred_npa, y_cov = gp_object.predict(x_pred_npa, return_cov=True)
+
+        y_pred_npa = y_pred_npa.ravel() + _func(x_pred_npa.ravel() )
 
 
         fig, ax = _plt.subplots(figsize=(8, 6))
@@ -439,19 +464,19 @@ class _Base:
 
         # plot the Gaussian process.
 
-        ax.plot(x_pred_npa,
-                y_pred_npa,
+        ax.plot(x_pred_npa.ravel(),
+                y_pred_npa.ravel(),
                 '#002147',
                 lw=1,
                 zorder=9,
                 alpha=0.7,
-                label='GP Prediction'))
+                label='GP Prediction')
 
         for sig_mult, alpha in [[1, 0.4], [2, 0.2]]: #, [3, 0.1], [4, 0.1]]:
             # This is the strength of the shading at each value of sigma
-            ax.fill_between(x_pred_npa, y_pred_npa - sig_mult*np.sqrt(np.diag(y_cov)),
-                             y_pred_npa + sig_mult*np.sqrt(np.diag(y_cov)),
-                             alpha=alpha, color='#a3c1ad', label='%s $\sigma$ envelope' % str(sig_mult))
+            ax.fill_between(x_pred_npa.ravel(), y_pred_npa.ravel() - sig_mult*np.sqrt(np.diag(y_cov)).ravel(),
+                            (y_pred_npa).ravel() + sig_mult*np.sqrt(np.diag(y_cov)).ravel(),
+                            alpha=alpha, color='#a3c1ad', label='%s $\sigma$ envelope' % str(sig_mult))
 
         ax.set_xlim([0.8, _np.max(T)])
 
