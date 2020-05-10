@@ -285,26 +285,35 @@ class _Base:
 
         # data
         T = _np.arange(0.1, 500.1, 0.1)
+        # the time sampled linearly
         sT = self.distr.isf(self.frec * 1./T)
+        # the inverse survival function
         N = _np.r_[1:len(self.data)+1] * self.frec
+        # unclear -- some numpy magic?
         Nmax = max(N)
 
         # plot
         ax = self._plot(ax, 'Return Level Plot',
                         'Return period', 'Return level')
-        ax.semilogx(T, sT)
-        ax.scatter(self.frec * Nmax/N,
-                   sorted(self.data)[::-1],
-                   marker='+', color='#002147', alpha=0.7)
-
+        # ok semilogx apparently gets the settings right for the next
+        # plot too.
+        ax.semilogx(T, sT, 'k', color='#CB4154')
+        ax.scatter(self.frec * Nmax/N, sorted(self.data)[::-1],
+                    color='#002147', alpha=0.7)
         # plot confidence intervals if available
         if self.ci:
             #y1 = sT - st.norm.ppf(1 - self.ci / 2) * np.sqrt(self._ci_se)
             #y2 = sT + st.norm.ppf(1 - self.ci / 2) * np.sqrt(self._ci_se)
-            ax.semilogx(T, self._ci_Td, '--')
-            ax.semilogx(T, self._ci_Tu, '--')
+            # thanks to the delta error theory, the errors are Gaussian in
+            # this space.
+            ax.semilogx(T, self._ci_Td, '--',
+                         color='#CB4154', alpha=0.6)
+            ax.semilogx(T, self._ci_Tu, '--',
+                         color='#CB4154', alpha=0.6)
             ax.fill_between(T, self._ci_Td, self._ci_Tu,
-                            color='0.4', alpha=0.5)
+                             color='#a3c1ad', alpha=0.25)
+            ax.set_xlim([0.8, _np.max(T)])
+
 
     def plot_summary(self):
         """
@@ -358,15 +367,26 @@ class _Base:
         # Return levels plot
         T = _np.arange(0.1, 500.1, 0.1)
         sT = self.distr.isf(self.frec/T)
+        # In other words start:stop:stepj is interpreted as np.linspace(start, stop, step, endpoint=1)
         N = _np.r_[1:len(self.data)+1] * self.frec
+        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.r_.html
+        # translates a slice object into concatenation along the first axis
+        #  In other words start:stop:stepj is interpreted as np.linspace(start, stop, step, endpoint=1)
+        # so I think thsi is equivalent to [1, 2, 3]*self.freq
+        # where frec is really the time period.
+        # This repository is v. confusing.
+
+
         Nmax=max(N)
         ax4 = self._plot(ax4,
                          'Return Level Plot',
                          'Return Period ' + self.block_unit,
                          'Return Level' + self.ev_unit)
         ax4.semilogx(T, sT, 'k', color='#CB4154')
-        ax4.scatter(self.frec * Nmax/N, sorted(self.data)[::-1],
+        ax4.scatter(self.frec * Nmax/N, # this is the second time timesing through by 
+                    sorted(self.data)[::-1],
                     color='#002147', alpha=0.7)
+
 
         if self.ci:
             #y1 = sT - st.norm.ppf(1 - self.ci / 2) * np.sqrt(self._ci_se)
@@ -442,6 +462,7 @@ class GEV(_Base):
     """
 
     def _fit(self):
+
         # Fit can be made using Maximum Likelihood Estimation (mle) or using
         # l-moments.
         # L-moments is fast and accurate most of the time for the GEV
@@ -454,12 +475,16 @@ class GEV(_Base):
         # input data. This is why we are using lmoments to obtain start values
         # for the mle optimization. For mle we are using fmin_bfgs as it is
         # faster than others and with the first guess provide accurate results.
+
         if self.fit_method == 'mle':
+
             # Initial guess to make the fit of GEV more stable
             # To do the initial guess we are using lmoments...
+
             _params0 = _lmdistr.gev.lmom_fit(self.data)
             # The mle fit will start with the initial estimators obtained
             # with lmoments above
+
             _params = _st.genextreme.fit(self.data, _params0['c'],
                                          loc = _params0['loc'],
                                          scale = _params0['scale'],
@@ -475,6 +500,7 @@ class GEV(_Base):
 
         # L-MOMENTS FIT
         if self.fit_method == 'lmoments':
+
             _params = _lmdistr.gev.lmom_fit(self.data)
             self.params = OrderedDict()
             # For the shape parameter the value provided by lmoments3
@@ -486,6 +512,7 @@ class GEV(_Base):
 
         # METHOD OF MOMENTS FIT
         if self.fit_method == 'mom':
+
             _params = _gev_momfit(self.data)
             self.params = OrderedDict()
             self.params["shape"]    = _params[0]
@@ -545,14 +572,23 @@ class GEV(_Base):
         c  = -self.c    # We negate the shape to avoid inconsistency problems!?
         # I.e we have just swapped the sign convention for the shape parameter!
         # This is very confusing, please don't copy down the wrong maths.
-        loc = self.loc
+
+        loc = self.loc # at least these two parameters don't change sign.
         scale = self.scale
 
         hess = _ndt.Hessian(self._nnlf)  # https://en.wikipedia.org/wiki/Hessian_matrix
         T = _np.arange(0.1, 500.1, 0.1) # years chosen from  0.1 to 500.1 in linear space
-        sT = -_np.log(1. - self.frec / T) # return period
-        sT2 = self.distr.isf(self.frec / T) # the inverse survival function
+        sT = -_np.log(1. - self.frec / T) # ~~return period
+        sT2 = self.distr.isf(self.frec / T)
+
+        # the inverse survival function
         # The size of the extreme value (I think)?
+        # Actually the precent pint fucntion which gives the probability
+        # https://www.itl.nist.gov/div898/handbook/eda/section3/eda362.htm
+        # It goes from the largest to the smallest value.
+        # Z(α)=G(1−α)
+        # The horizontal axis is the probability.
+        # The Y axis fed out is the extreme value.
 
         # VarCovar matrix and confidence values for estimators and return values
         # Confidence interval for return values (up values and down values)
@@ -563,7 +599,9 @@ class GEV(_Base):
         # I currently don't understand the truth value of a float.
 
         if c:
-            print('\n c is', c, '\n')
+            # sign convention still reversed!!!
+
+            print('\n c is ', c, '\n')
 
             # If c then we are calculating GEV confidence intervals
             print('\n !working out GEV confidence intervals! \n')
@@ -574,6 +612,8 @@ class GEV(_Base):
             self._se = se
 
             # symmetric error bars in all the parameters.
+            # sign convention not reversed!!!
+
             self.params_ci['shape']    = (self.c - _st.norm.ppf(1 - self.ci / 2) * se[0],
                                           self.c + _st.norm.ppf(1 - self.ci / 2) * se[0])
             self.params_ci['location'] = (self.loc - _st.norm.ppf(1 - self.ci / 2) * se[1],
@@ -582,6 +622,9 @@ class GEV(_Base):
                                           self.scale + _st.norm.ppf(1 - self.ci / 2) * se[2])
 
             for i, val in enumerate(sT2):
+                # sign convention still reversed!!!
+
+
 
                 gradZ = [(scale * (c**(-2)) * (1 - (sT[i] ** (-c)))
                           - scale * (c**(-1)) * (sT[i]**-c) * _np.log(sT[i])),
@@ -593,6 +636,8 @@ class GEV(_Base):
                 # Gosh, what did that line do?
                 ci_Tu[i] = val + _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se) # upper limit.
                 ci_Td[i] = val - _st.norm.ppf(1 - self.ci / 2) * _np.sqrt(se) # lower limit.
+                # sign convention still reversed!!!
+
 
         else:
             # else then we are calculating Gumbel confidence intervals.
