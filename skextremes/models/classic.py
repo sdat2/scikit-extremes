@@ -293,6 +293,7 @@ class _Base:
         Nmax = max(N)
 
         # plot
+
         ax = self._plot(ax, 'Return Level Plot',
                         'Return period', 'Return level')
         # ok semilogx apparently gets the settings right for the next
@@ -376,14 +377,13 @@ class _Base:
         # where frec is really the time period.
         # This repository is v. confusing.
 
-
-        Nmax=max(N)
+        Nmax = max(N)
         ax4 = self._plot(ax4,
                          'Return Level Plot',
                          'Return Period ' + self.block_unit,
                          'Return Level' + self.ev_unit)
         ax4.semilogx(T, sT, 'k', color='#CB4154')
-        ax4.scatter(self.frec * Nmax/N, # this is the second time timesing through by 
+        ax4.scatter(self.frec * Nmax/N, # this is the second time timesing through by
                     sorted(self.data)[::-1],
                     color='#002147', alpha=0.7)
 
@@ -403,6 +403,57 @@ class _Base:
         _plt.tight_layout()
 
         return fig, ax1, ax2, ax3, ax4
+
+    def plot_pi_gp(tend_from, tend_to, plateau_by):
+        import numpy as np
+        from sklearn.gaussian_process import GaussianProcessRegressor
+        from sklearn.gaussian_process.kernels import RBF
+        kernel = (1* RBF(length_scale=3000,
+                        length_scale_bounds=(2000, 10000),# periodicity=8000
+                        ) + 1.0 * WhiteKernel(noise_level=1e-1)))
+
+
+        T = _np.arange(0.1, 500.1, 0.1)
+        # sT = self.distr.isf(self.frec/T)
+        # In other words start:stop:stepj is interpreted as np.linspace(start, stop, step, endpoint=1)
+
+        N = _np.r_[1:len(self.data)+1] * self.frec
+        Nmax = max(N)
+        x_values = self.frec * Nmax/N
+        y_values = sorted(self.data)[::-1]
+        x_pred_npa = T
+
+        gp_object = GaussianProcessRegressor(kernel=kernel, alpha=0.0).fit(x_values, y_values)
+        y_pred, y_cov = gp_object.predict(x_pred_npa[:, np.newaxis], return_cov=True)
+
+
+        fig, ax = _plt.subplots(figsize=(8, 6))
+
+        ax = self._plot(ax, 'Return Level Plot - w. GP fit.',
+                        'Return period (Yrs)', 'Return level (m)')
+        # ok semilogx apparently gets the settings right for the next
+        # plot too.
+        ax.set_xscale('log')
+        ax.scatter(x_values, y_values,
+                    color='#002147', alpha=0.7)
+
+        # plot the Gaussian process.
+
+        ax.plot(x_pred_npa,
+                y_pred_npa,
+                '#002147',
+                lw=1,
+                zorder=9,
+                alpha=0.7,
+                label='GP Prediction'))
+
+        for sig_mult, alpha in [[1, 0.4], [2, 0.2]]: #, [3, 0.1], [4, 0.1]]:
+            # This is the strength of the shading at each value of sigma
+            ax.fill_between(x_pred_npa, y_pred_npa - sig_mult*np.sqrt(np.diag(y_cov)),
+                             y_pred_npa + sig_mult*np.sqrt(np.diag(y_cov)),
+                             alpha=alpha, color='#a3c1ad', label='%s $\sigma$ envelope' % str(sig_mult))
+
+        ax.set_xlim([0.8, _np.max(T)])
 
 
 class GEV(_Base):
